@@ -1,23 +1,34 @@
 {
   "expo": {
-    "name": "project-TORCH",
-    "slug": "project-TORCH",
+    "name": "Project Torch",
+    "slug": "project-torch",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Access to flash is required to illuminate the torch."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0a1120",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": ["android.permission.CAMERA", "android.permission.FLASHLIGHT"]
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Access to flash is required to illuminate the torch."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
