@@ -24,7 +24,7 @@ export default function App() {
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    // Request camera/flash permission on app mount if not granted
+    // Gracefully request camera permission on mount if available
     if (permission && !permission.granted && permission.canAskAgain) {
       requestPermission();
     }
@@ -32,14 +32,13 @@ export default function App() {
 
   const handleToggleTorch = async () => {
     if (isTorchOn) {
-      // Turning OFF torch is always permitted and does not cost quota
+      // Turning OFF torch is free
       setIsTorchOn(false);
       return;
     }
 
-    // Turning ON torch: Check session quota
+    // Turning ON torch: check quota
     if (quota <= 0) {
-      // Quota depleted! Lock activation and trigger darkness paywall modal
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       } catch {}
@@ -47,7 +46,7 @@ export default function App() {
       return;
     }
 
-    // Quota available: Turn ON torch and decrement session quota by 1
+    // Quota available: turn ON and decrement count
     setIsTorchOn(true);
     setQuota((prev) => prev - 1);
   };
@@ -61,16 +60,16 @@ export default function App() {
       'System Notifications',
       '• Photonic Emission Engine v2.4 initialized\n• Session quota: ' +
         quota +
-        ' remaining\n• Dodo Payments Gateway Active',
+        ' uses remaining\n• Dodo Payments Gateway Active',
       [{ text: 'Dismiss', style: 'default' }]
     );
   };
 
   return (
     <View style={styles.background}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.groundDark} />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.groundDark} translucent />
 
-      {/* Headless CameraView for Hardware Flash Flashlight Toggle */}
+      {/* Headless CameraView for real device hardware torch toggle */}
       {permission?.granted && (
         <CameraView
           style={styles.headlessCamera}
@@ -85,10 +84,10 @@ export default function App() {
         style={styles.gradientContainer}
       >
         <SafeAreaView style={styles.safeArea}>
-          {/* Header Bar */}
+          {/* Header with status bar collision fix */}
           <Header onNotificationPress={handleNotificationPress} />
 
-          {/* Camera Permission Bar (if permission not yet granted) */}
+          {/* Camera Permission Banner if not yet granted */}
           {permission && !permission.granted && (
             <TouchableOpacity
               style={styles.permissionBanner}
@@ -108,16 +107,15 @@ export default function App() {
             />
           </View>
 
-          {/* Footer Quota System */}
+          {/* Footer Quota Pill */}
           <FooterQuota
             quota={quota}
-            maxQuota={10}
             onOpenPaywall={() => setIsPaywallOpen(true)}
           />
         </SafeAreaView>
       </LinearGradient>
 
-      {/* Fintech Paywall Bottom-Sheet Modal */}
+      {/* Darkness Settlement Paywall Modal */}
       <PaywallModal
         visible={isPaywallOpen}
         onClose={() => setIsPaywallOpen(false)}
@@ -137,7 +135,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: 'space-between', // Balanced flex spacing
     alignItems: 'center',
   },
   headlessCamera: {
@@ -154,14 +152,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   permissionBanner: {
-    backgroundColor: 'rgba(255, 180, 0, 0.15)',
+    backgroundColor: 'rgba(255, 180, 0, 0.14)',
     borderColor: 'rgba(255, 180, 0, 0.4)',
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginHorizontal: 20,
-    marginTop: 8,
+    paddingVertical: 10,
+    marginHorizontal: 22,
+    marginTop: 4,
   },
   permissionText: {
     color: '#ffc107',

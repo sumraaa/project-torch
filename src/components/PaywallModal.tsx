@@ -18,7 +18,7 @@ export interface PlanTier {
   price: number;
   description: string;
   badge?: string;
-  quotaRefillCount: number; // 10 for full refill, 3 for micro-lease, 1 for one sachet
+  quotaRefillCount: number;
 }
 
 const PLAN_TIERS: PlanTier[] = [
@@ -66,9 +66,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   const handleSelectPlan = async (id: string) => {
     try {
       await Haptics.selectionAsync();
-    } catch {
-      // Haptics fallback
-    }
+    } catch {}
     setSelectedPlanId(id);
   };
 
@@ -79,7 +77,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
     setIsProcessing(true);
 
-    // Simulate fintech payment settlement network latency (1.5 seconds)
+    // Simulate fintech payment settlement latency
     setTimeout(async () => {
       setIsProcessing(false);
       setIsSuccess(true);
@@ -88,13 +86,12 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
 
-      // After displaying success for 1 second, refill quota and close modal
       setTimeout(() => {
         setIsSuccess(false);
         onPaymentSuccess(selectedPlan.quotaRefillCount);
         onClose();
-      }, 1200);
-    }, 1500);
+      }, 1100);
+    }, 1400);
   };
 
   return (
@@ -106,6 +103,11 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.sheetContainer}>
+          {/* Top Sheet Handle Pill */}
+          <View style={styles.handlePillContainer}>
+            <View style={styles.handlePill} />
+          </View>
+
           {/* Header Bar */}
           <View style={styles.header}>
             <View style={styles.headerTitleGroup}>
@@ -120,9 +122,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
           </View>
 
           <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
-            {/* Introductory subtitle */}
             <Text style={styles.subtitle}>
-              Your session photonic quota has expired. Choose a luxury tier to unlock instant flashlight emissions.
+              Your session photonic quota has expired. Select a settlement tier to restore immediate flashlight capability.
             </Text>
 
             {/* Plan Tier Selection Cards */}
@@ -133,7 +134,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 return (
                   <TouchableOpacity
                     key={plan.id}
-                    activeOpacity={0.85}
+                    activeOpacity={0.88}
                     onPress={() => handleSelectPlan(plan.id)}
                     style={[
                       styles.planCard,
@@ -147,7 +148,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                     )}
 
                     <View style={styles.planCardHeader}>
-                      {/* Radio Circle */}
+                      {/* Active Lime Radio Circle Outline */}
                       <View
                         style={[
                           styles.radioCircle,
@@ -171,7 +172,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
               })}
             </View>
 
-            {/* Card Field Simulation */}
+            {/* Masked Card Detail Row */}
             <View style={styles.cardFieldContainer}>
               <Text style={styles.sectionLabel}>PAYMENT METHOD</Text>
               <View style={styles.cardInputRow}>
@@ -184,7 +185,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
               </View>
             </View>
 
-            {/* Dodo Payments Trust Footer */}
+            {/* Trust Footer */}
             <View style={styles.trustFooter}>
               <MaterialCommunityIcons name="shield-check" size={16} color={COLORS.mintIndicator} />
               <Text style={styles.trustText}>
@@ -193,16 +194,16 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
             </View>
           </ScrollView>
 
-          {/* Pay Button / Processing State */}
+          {/* Solid Lime Primary CTA Button */}
           <View style={styles.footerAction}>
             {isSuccess ? (
               <View style={styles.successStateBtn}>
-                <Ionicons name="checkmark-circle-outline" size={22} color={COLORS.textDark} />
+                <Ionicons name="checkmark-circle" size={22} color={COLORS.textDark} />
                 <Text style={styles.successStateText}>Quota Refilled (10 Uses)!</Text>
               </View>
             ) : (
               <TouchableOpacity
-                activeOpacity={0.8}
+                activeOpacity={0.85}
                 onPress={handlePayment}
                 disabled={isProcessing}
                 style={[styles.payBtn, isProcessing && styles.payBtnDisabled]}
@@ -229,32 +230,43 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 8, 16, 0.75)',
+    backgroundColor: 'rgba(4, 7, 14, 0.82)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: COLORS.cardBackground,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: '#121c2e',
+    borderTopLeftRadius: 32, // Sleek 32px rounded top corners
+    borderTopRightRadius: 32,
     maxHeight: '90%',
     paddingBottom: 28,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: -12 },
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
     elevation: 25,
+  },
+  handlePillContainer: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  handlePill: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 22,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: 12,
+    paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   headerTitleGroup: {
     gap: 2,
@@ -282,7 +294,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.cardBackgroundElevated,
+    backgroundColor: '#1c2940',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -301,16 +313,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   planCard: {
-    backgroundColor: COLORS.cardBackgroundElevated,
-    borderRadius: 16,
+    backgroundColor: '#18253b',
+    borderRadius: 18,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: COLORS.cardBorder,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     position: 'relative',
   },
   planCardSelected: {
-    borderColor: COLORS.electricLime,
-    backgroundColor: 'rgba(195, 242, 77, 0.05)',
+    borderColor: COLORS.electricLime, // Active lime radio outline & card border
+    backgroundColor: 'rgba(195, 242, 77, 0.06)',
   },
   popularBadge: {
     position: 'absolute',
@@ -333,9 +345,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   radioCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     borderColor: COLORS.textMuted,
     alignItems: 'center',
@@ -371,11 +383,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   cardFieldContainer: {
-    backgroundColor: COLORS.cardBackgroundElevated,
-    borderRadius: 16,
+    backgroundColor: '#18253b',
+    borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     marginBottom: 16,
   },
   sectionLabel: {
@@ -392,7 +404,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   visaIcon: {
     marginRight: 4,
@@ -424,18 +436,18 @@ const styles = StyleSheet.create({
   },
   footerAction: {
     paddingHorizontal: 22,
-    paddingTop: 10,
+    paddingTop: 8,
   },
   payBtn: {
-    backgroundColor: COLORS.electricLime,
-    borderRadius: 16,
+    backgroundColor: COLORS.electricLime, // Solid lime primary CTA button
+    borderRadius: 18,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: COLORS.electricLime,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
     elevation: 8,
   },
   payBtnDisabled: {
@@ -454,7 +466,7 @@ const styles = StyleSheet.create({
   },
   successStateBtn: {
     backgroundColor: COLORS.mintIndicator,
-    borderRadius: 16,
+    borderRadius: 18,
     paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',

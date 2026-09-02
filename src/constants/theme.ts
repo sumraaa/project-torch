@@ -16,20 +16,20 @@ export const COLORS = {
   mintIndicator: '#57e0a8',
   mintGlow: 'rgba(87, 224, 168, 0.3)',
   
-  // Danger / Alert
-  alertRed: '#ff4d6d',
-  alertRedBg: 'rgba(255, 77, 109, 0.15)',
-  alertRedBorder: 'rgba(255, 77, 109, 0.3)',
+  // Concave Basin Gradient
+  basinStart: '#141e33',
+  basinEnd: '#0b1322',
   
   // Typography
   textPrimary: '#f2f6ff',
   textSecondary: '#8fa0bf',
+  textSubtlePill: '#d8e2f0',
   textDark: '#0a1120',
   textMuted: '#5a6b8c',
   
-  // 3D Button Rim & Bevels
-  rimBorder: '#273859',
-  rimHighlight: '#324770',
+  // 3D Bevels & Shadows
+  bevelHighlight: 'rgba(255, 255, 255, 0.15)',
+  bevelShadow: 'rgba(0, 0, 0, 0.85)',
   shadowDark: '#050810',
   shadowLight: '#233454',
 };
@@ -46,13 +46,13 @@ export const SHADOWS = {
     shadowColor: '#c3f24d',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
-    shadowRadius: 24,
-    elevation: 15,
+    shadowRadius: 28,
+    elevation: 20,
   },
   button3D: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.6,
+    shadowOpacity: 0.7,
     shadowRadius: 28,
     elevation: 20,
   },

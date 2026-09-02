@@ -19,7 +19,12 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "permissions": ["android.permission.CAMERA", "android.permission.FLASHLIGHT"]
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.FLASHLIGHT",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.sumraaa.projecttorch"
     },
     "plugins": [
       [
@@ -31,6 +36,11 @@
     ],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "de2bfa2e-9a70-4513-a86e-d5a081b13cf3"
+      }
     }
   }
 }

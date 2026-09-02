@@ -12,40 +12,38 @@ interface TorchEngineProps {
 }
 
 export const TorchEngine: React.FC<TorchEngineProps> = ({ isOn, onToggle, isDisabled = false }) => {
-  // Glow flare animation
   const glowAnim = useRef(new Animated.Value(isOn ? 1 : 0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const beamAnim = useRef(new Animated.Value(isOn ? 1 : 0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(glowAnim, {
         toValue: isOn ? 1 : 0,
-        duration: 400,
+        duration: 350,
         useNativeDriver: true,
         easing: Easing.out(Easing.quad),
       }),
       Animated.timing(beamAnim, {
         toValue: isOn ? 1 : 0,
-        duration: 350,
+        duration: 300,
         useNativeDriver: true,
       }),
     ]).start();
 
     if (isOn) {
-      // Gentle subtle pulse animation when torch is ON
       const pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.1,
-            duration: 1200,
+            toValue: 1.08,
+            duration: 1400,
             useNativeDriver: true,
             easing: Easing.inOut(Easing.ease),
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 1200,
+            duration: 1400,
             useNativeDriver: true,
             easing: Easing.inOut(Easing.ease),
           }),
@@ -60,25 +58,27 @@ export const TorchEngine: React.FC<TorchEngineProps> = ({ isOn, onToggle, isDisa
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.94,
+      toValue: 0.93, // Physical tactile depression
       useNativeDriver: true,
+      speed: 20,
+      bounciness: 4,
     }).start();
   };
 
   const handlePressOut = () => {
     Animated.spring(scaleAnim, {
       toValue: 1,
-      friction: 4,
       useNativeDriver: true,
+      speed: 16,
+      bounciness: 6,
     }).start();
   };
 
   const handlePress = async () => {
-    // Provide heavy tactile haptic feedback on press
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     } catch {
-      // Haptics fallback for platforms without hardware support
+      // Haptics fallback
     }
     onToggle();
   };
@@ -88,6 +88,11 @@ export const TorchEngine: React.FC<TorchEngineProps> = ({ isOn, onToggle, isDisa
     outputRange: [0.15, 0.95],
   });
 
+  const auraScale = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.85, 1.15],
+  });
+
   const beamOpacity = beamAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1],
@@ -95,149 +100,154 @@ export const TorchEngine: React.FC<TorchEngineProps> = ({ isOn, onToggle, isDisa
 
   const beamScale = beamAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.5, 1],
+    outputRange: [0.4, 1],
   });
 
   return (
     <View style={styles.container}>
-      {/* 1. AMBIENT RADIAL GLOW (AURA) */}
+      {/* LAYER 1: AMBIENT RADIAL GLOW & DROP SHADOW */}
       <Animated.View
         style={[
           styles.auraContainer,
           {
             opacity: auraOpacity,
-            transform: [{ scale: pulseAnim }],
+            transform: [
+              { scale: Animated.multiply(auraScale, pulseAnim) },
+            ],
           },
         ]}
       >
         <LinearGradient
           colors={
             isOn
-              ? ['rgba(195, 242, 77, 0.35)', 'rgba(87, 224, 168, 0.2)', 'rgba(10, 17, 32, 0)']
-              : ['rgba(39, 56, 89, 0.2)', 'rgba(10, 17, 32, 0)']
+              ? ['rgba(195, 242, 77, 0.45)', 'rgba(87, 224, 168, 0.25)', 'rgba(10, 17, 32, 0)']
+              : ['rgba(35, 52, 84, 0.25)', 'rgba(10, 17, 32, 0)']
           }
           style={styles.auraGradient}
         />
       </Animated.View>
 
-      {/* 2. PHOTON BEAM RAYS (Visible when ON) */}
-      <Animated.View
-        style={[
-          styles.beamContainer,
-          {
-            opacity: beamOpacity,
-            transform: [{ scale: beamScale }],
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={['rgba(195, 242, 77, 0.4)', 'rgba(195, 242, 77, 0.05)', 'transparent']}
-          style={styles.beamCone}
-        />
-        {/* Ray Lines */}
-        <View style={[styles.rayLine, { transform: [{ rotate: '-35deg' }] }]} />
-        <View style={[styles.rayLine, { transform: [{ rotate: '-18deg' }] }]} />
-        <View style={[styles.rayLine, { transform: [{ rotate: '0deg' }] }]} />
-        <View style={[styles.rayLine, { transform: [{ rotate: '18deg' }] }]} />
-        <View style={[styles.rayLine, { transform: [{ rotate: '35deg' }] }]} />
-      </Animated.View>
-
-      {/* 3. 3D SKEUOMORPHIC CIRCULAR BUTTON */}
+      {/* 3D PUSH BUTTON CORE */}
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <TouchableOpacity
-          activeOpacity={0.9}
+          activeOpacity={0.92}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           onPress={handlePress}
           disabled={isDisabled}
-          style={styles.buttonWrapper}
+          style={styles.buttonTouchWrapper}
         >
-          {/* Outer Chamfer Rim */}
+          {/* LAYER 2: OUTER RAISED BEZEL with Top-Left Highlight & Bottom-Right Dark Shadow */}
           <LinearGradient
             colors={
               isOn
-                ? ['#c3f24d', '#57e0a8', '#17233c']
-                : ['#324770', '#17233c', '#0f1828']
+                ? ['rgba(195, 242, 77, 0.95)', 'rgba(87, 224, 168, 0.6)', 'rgba(10, 17, 32, 0.9)']
+                : ['rgba(255, 255, 255, 0.18)', '#1c2a44', 'rgba(0, 0, 0, 0.85)']
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
-              styles.outerRim,
-              isOn && styles.outerRimOn,
+              styles.outerRaisedBezel,
+              isOn && styles.outerRaisedBezelOn,
             ]}
           >
-            {/* Middle Bevel Ring */}
-            <View style={styles.middleBevel}>
-              {/* Inner Skeuomorphic Disk */}
+            {/* Middle Bevel Gap */}
+            <View style={styles.middleGapRing}>
+              {/* LAYER 3: INNER CONCAVE BASIN (#141e33 to #0b1322) */}
               <LinearGradient
-                colors={
-                  isOn
-                    ? ['#1f304d', '#142036']
-                    : ['#192742', '#0e1727']
-                }
-                start={{ x: 0.3, y: 0 }}
-                end={{ x: 0.7, y: 1 }}
-                style={styles.innerDisk}
+                colors={[COLORS.basinStart, COLORS.basinEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.innerConcaveBasin}
               >
-                {/* Inner Ring Glow */}
-                <View
-                  style={[
-                    styles.innerRingHighlight,
-                    isOn && styles.innerRingHighlightOn,
-                  ]}
+                {/* Concave Inner Lip Shadow Overlay */}
+                <LinearGradient
+                  colors={['rgba(0, 0, 0, 0.6)', 'transparent', 'rgba(255, 255, 255, 0.04)']}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={StyleSheet.absoluteFill}
                 />
 
-                {/* Torch Glyph Icon */}
-                <View style={styles.iconContainer}>
-                  {isOn ? (
-                    <MaterialCommunityIcons
-                      name="flashlight"
-                      size={64}
-                      color={COLORS.electricLime}
-                    />
-                  ) : (
-                    <MaterialCommunityIcons
-                      name="flashlight-off"
-                      size={64}
-                      color={COLORS.textMuted}
-                    />
-                  )}
+                {/* LAYER 4: FLASHLIGHT GLYPH & LIGHT BEAM RAYS */}
+                <View style={styles.glyphCenterContainer}>
+                  {/* 3 Glowing Angled Light Beam Rays projecting outward from top when ON */}
+                  <Animated.View
+                    style={[
+                      styles.beamRaysContainer,
+                      {
+                        opacity: beamOpacity,
+                        transform: [{ scale: beamScale }],
+                      },
+                    ]}
+                  >
+                    {/* Ray 1 (Angled Left -25 deg) */}
+                    <View style={[styles.beamRay, styles.beamRayLeft]}>
+                      <LinearGradient
+                        colors={['#c3f24d', 'rgba(195, 242, 77, 0)']}
+                        style={styles.beamRayGradient}
+                      />
+                    </View>
+
+                    {/* Ray 2 (Center Straight 0 deg) */}
+                    <View style={[styles.beamRay, styles.beamRayCenter]}>
+                      <LinearGradient
+                        colors={['#c3f24d', 'rgba(195, 242, 77, 0)']}
+                        style={styles.beamRayGradient}
+                      />
+                    </View>
+
+                    {/* Ray 3 (Angled Right +25 deg) */}
+                    <View style={[styles.beamRay, styles.beamRayRight]}>
+                      <LinearGradient
+                        colors={['#c3f24d', 'rgba(195, 242, 77, 0)']}
+                        style={styles.beamRayGradient}
+                      />
+                    </View>
+                  </Animated.View>
+
+                  {/* Solid Vertical Flashlight Icon */}
+                  <Ionicons
+                    name="flashlight"
+                    size={68}
+                    color={isOn ? COLORS.electricLime : COLORS.textSecondary}
+                    style={isOn ? styles.flashlightIconOn : styles.flashlightIconOff}
+                  />
+
+                  {/* Active Indicator Micro Dot */}
+                  <View
+                    style={[
+                      styles.indicatorDot,
+                      isOn ? styles.indicatorDotOn : styles.indicatorDotOff,
+                    ]}
+                  />
                 </View>
-
-                {/* Status Indicator Dot under Torch */}
-                <View
-                  style={[
-                    styles.statusDot,
-                    isOn ? styles.statusDotOn : styles.statusDotOff,
-                  ]}
-                />
               </LinearGradient>
             </View>
           </LinearGradient>
         </TouchableOpacity>
       </Animated.View>
 
-      {/* 4. UNDERNEATH LOW-OPACITY ELEVATED PILL BUTTON */}
+      {/* ELEVATED TACTILE SUB-BUTTON (Positioned directly below 3D circle with clean 28px gap) */}
       <TouchableOpacity
-        activeOpacity={0.7}
+        activeOpacity={0.8}
         onPress={handlePress}
         disabled={isDisabled}
         style={[
-          styles.pillButton,
-          isOn ? styles.pillButtonOn : styles.pillButtonOff,
-          isDisabled && styles.pillButtonDisabled,
+          styles.elevatedSubPill,
+          isOn ? styles.elevatedSubPillOn : styles.elevatedSubPillOff,
+          isDisabled && styles.subPillDisabled,
         ]}
       >
         <Ionicons
-          name={isOn ? 'power' : 'power-outline'}
+          name="power-sharp"
           size={16}
-          color={isOn ? COLORS.electricLime : COLORS.textSecondary}
-          style={{ marginRight: 6 }}
+          color={isOn ? COLORS.electricLime : COLORS.textSubtlePill}
+          style={{ marginRight: 8 }}
         />
         <Text
           style={[
-            styles.pillText,
-            isOn ? styles.pillTextOn : styles.pillTextOff,
+            styles.subPillText,
+            isOn ? styles.subPillTextOn : styles.subPillTextOff,
           ]}
         >
           {isOn ? 'Click to turn off torch' : 'Click to turn on torch'}
@@ -251,15 +261,16 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 20,
     position: 'relative',
     width: '100%',
   },
+
+  // LAYER 1: AMBIENT RADIAL GLOW
   auraContainer: {
     position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
+    width: 340,
+    height: 340,
+    borderRadius: 170,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 0,
@@ -267,140 +278,157 @@ const styles = StyleSheet.create({
   auraGradient: {
     width: '100%',
     height: '100%',
-    borderRadius: 160,
+    borderRadius: 170,
   },
-  beamContainer: {
-    position: 'absolute',
-    top: -40,
-    width: 240,
-    height: 140,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    zIndex: 1,
-    pointerEvents: 'none',
-  },
-  beamCone: {
-    width: 220,
-    height: 120,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    borderBottomLeftRadius: 110,
-    borderBottomRightRadius: 110,
-  },
-  rayLine: {
-    position: 'absolute',
-    top: 20,
-    width: 3,
-    height: 80,
-    backgroundColor: 'rgba(195, 242, 77, 0.4)',
-    borderRadius: 2,
-  },
-  buttonWrapper: {
+
+  // 3D PUSH BUTTON
+  buttonTouchWrapper: {
     zIndex: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.6,
-    shadowRadius: 24,
-    elevation: 20,
+    shadowOpacity: 0.75,
+    shadowRadius: 26,
+    elevation: 22,
   },
-  outerRim: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+  outerRaisedBezel: {
+    width: 216,
+    height: 216,
+    borderRadius: 108,
+    padding: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outerRaisedBezelOn: {
+    shadowColor: COLORS.electricLime,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 24,
+    elevation: 25,
+  },
+  middleGapRing: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 101,
+    backgroundColor: '#070c18',
     padding: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  outerRimOn: {
-    shadowColor: COLORS.electricLime,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 24,
-  },
-  middleBevel: {
+  innerConcaveBasin: {
     width: '100%',
     height: '100%',
-    borderRadius: 94,
-    backgroundColor: '#0a1120',
-    padding: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  innerDisk: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 89,
+    borderRadius: 95,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    overflow: 'hidden',
   },
-  innerRingHighlight: {
-    position: 'absolute',
-    top: 4,
-    width: 150,
-    height: 75,
-    borderTopLeftRadius: 75,
-    borderTopRightRadius: 75,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-  },
-  innerRingHighlightOn: {
-    backgroundColor: 'rgba(195, 242, 77, 0.12)',
-  },
-  iconContainer: {
+
+  // LAYER 4: FLASHLIGHT GLYPH & BEAM RAYS
+  glyphCenterContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 10,
+  beamRaysContainer: {
+    position: 'absolute',
+    top: -46,
+    width: 100,
+    height: 44,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
-  statusDotOn: {
+  beamRay: {
+    width: 4,
+    height: 36,
+    borderRadius: 2,
+    marginHorizontal: 10,
+    overflow: 'hidden',
+  },
+  beamRayLeft: {
+    transform: [{ rotate: '-24deg' }, { translateY: -4 }],
+  },
+  beamRayCenter: {
+    height: 42,
+    transform: [{ rotate: '0deg' }, { translateY: -8 }],
+  },
+  beamRayRight: {
+    transform: [{ rotate: '24deg' }, { translateY: -4 }],
+  },
+  beamRayGradient: {
+    width: '100%',
+    height: '100%',
+  },
+
+  flashlightIconOn: {
+    shadowColor: COLORS.electricLime,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 16,
+  },
+  flashlightIconOff: {
+    opacity: 0.85,
+  },
+  indicatorDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginTop: 8,
+  },
+  indicatorDotOn: {
     backgroundColor: COLORS.electricLime,
     shadowColor: COLORS.electricLime,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 6,
   },
-  statusDotOff: {
+  indicatorDotOff: {
     backgroundColor: COLORS.textMuted,
-    opacity: 0.4,
+    opacity: 0.35,
   },
-  pillButton: {
+
+  // ELEVATED TACTILE SUB-BUTTON (Clean 28px gap below 3D circle)
+  elevatedSubPill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
     borderRadius: 24,
-    marginTop: 28,
+    marginTop: 28, // Clean 28px gap
     borderWidth: 1,
     zIndex: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  pillButtonOff: {
-    backgroundColor: 'rgba(23, 35, 60, 0.65)',
-    borderColor: COLORS.cardBorder,
+  elevatedSubPillOff: {
+    backgroundColor: '#152136',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  pillButtonOn: {
-    backgroundColor: 'rgba(195, 242, 77, 0.15)',
+  elevatedSubPillOn: {
+    backgroundColor: 'rgba(195, 242, 77, 0.12)',
     borderColor: COLORS.cardBorderLime,
+    shadowColor: COLORS.electricLime,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
   },
-  pillButtonDisabled: {
+  subPillDisabled: {
     opacity: 0.5,
   },
-  pillText: {
-    fontSize: 13,
-    fontWeight: '600',
+  subPillText: {
+    fontSize: 14,
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
-  pillTextOff: {
-    color: COLORS.textSecondary,
+  subPillTextOff: {
+    color: COLORS.textSubtlePill, // Muted near-white #d8e2f0
   },
-  pillTextOn: {
-    color: COLORS.electricLime,
+  subPillTextOn: {
+    color: COLORS.electricLime, // Mint glow / lime text #c3f24d
   },
 });
